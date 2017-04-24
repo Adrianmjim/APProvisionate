@@ -1,5 +1,6 @@
 package pad.ucm.approvisionate;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -12,10 +13,23 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
+
+import com.firebase.ui.auth.AuthUI;
+import com.firebase.ui.auth.ErrorCodes;
+import com.firebase.ui.auth.IdpResponse;
+import com.firebase.ui.auth.ResultCodes;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
+import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
+    private static final int RC_SIGN_IN = 123;
+    private TextView texto;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,6 +54,14 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+        texto = (TextView) findViewById(R.id.texto);
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        DatabaseReference myRef = database.getReference();
+        if(myRef.child("localizacion").setValue(new String("HOLa")).isComplete())
+           texto.setText("HECHO");
+        else
+            texto.setText("NO HECHO");
+
     }
 
     @Override
@@ -97,5 +119,37 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        // RC_SIGN_IN is the request code you passed into startActivityForResult(...) when starting the sign in flow.
+        if (requestCode == RC_SIGN_IN) {
+            IdpResponse response = IdpResponse.fromResultIntent(data);
+
+            // Successfully signed in
+            if (resultCode == ResultCodes.OK) {
+                FirebaseAuth auth = FirebaseAuth.getInstance();
+                if (auth.getCurrentUser() != null)
+                    texto.setText(auth.getCurrentUser().getEmail());
+                else
+                    texto.setText("EROOR");
+            } else {
+                // Sign in failed
+                if (response == null) {
+                    // User pressed back button
+
+                }
+
+                if (response.getErrorCode() == ErrorCodes.NO_NETWORK) {
+                    texto.setText("SIN CONEXION");
+                }
+
+                if (response.getErrorCode() == ErrorCodes.UNKNOWN_ERROR) {
+                    texto.setText("DESCONOCIDO");
+                }
+            }
+
+
+        }
     }
 }
