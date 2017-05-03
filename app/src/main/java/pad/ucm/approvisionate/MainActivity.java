@@ -15,6 +15,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
+
 import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.ErrorCodes;
 import com.firebase.ui.auth.IdpResponse;
@@ -55,12 +56,16 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         texto = (TextView) findViewById(R.id.texto);
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference myRef = database.getReference();
-        if(myRef.child("localizacion").setValue(new String("HOLa")).isComplete())
-           texto.setText("HECHO");
-        else
-            texto.setText("NO HECHO");
+        startActivityForResult(
+                AuthUI.getInstance()
+                        .createSignInIntentBuilder()
+                        .setProviders(Arrays.asList(new AuthUI.IdpConfig.Builder(AuthUI.EMAIL_PROVIDER).build()))
+                        .build(),
+                RC_SIGN_IN);
+
+
+
+
 
     }
 
@@ -129,9 +134,14 @@ public class MainActivity extends AppCompatActivity
             // Successfully signed in
             if (resultCode == ResultCodes.OK) {
                 FirebaseAuth auth = FirebaseAuth.getInstance();
-                if (auth.getCurrentUser() != null)
-                    texto.setText(auth.getCurrentUser().getEmail());
-                else
+                if (auth.getCurrentUser() != null) {
+                    FirebaseDatabase database = FirebaseDatabase.getInstance();
+                    DatabaseReference myRef = database.getReference();
+                    if (myRef.child("localizacion").setValue(new String("HOLa")).isComplete())
+                        texto.setText("HECHO");
+                    else
+                        texto.setText("NO HECHO");
+                }else
                     texto.setText("EROOR");
             } else {
                 // Sign in failed
