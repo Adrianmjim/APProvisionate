@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "790244775820",
+    "firebase_url": "https://approvisionate.firebaseio.com",
+    "project_id": "approvisionate",
+    "storage_bucket": "approvisionate.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:790244775820:android:32b6ad0ba060d965",
+        "android_client_info": {
+          "package_name": "pad.ucm.approvisionate"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "790244775820-s0o3da857kep0u6fgapj13pq82imiooh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBudNDd0ZgXOjGBRTNnMXeDY7Jkl7taQDI"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
