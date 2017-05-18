@@ -3,6 +3,7 @@
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
-    <string name="server_client_id">790244775820-ml3mhln68c0dkgeds9a1hbrfl8b3899b.apps.googleusercontent.com></string>
+    <string name="server_client_id">790244775820-s0o3da857kep0u6fgapj13pq82imiooh.apps.googleusercontent.com</string>
     <string name="action_settings">Settings</string>
+    <string name="API_MAPS">AIzaSyAtRH2_nSFxc7Y78DTGB_QK4eI0nMSZU9w</string>
 </resources>

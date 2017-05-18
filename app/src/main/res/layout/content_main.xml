@@ -8,21 +8,12 @@
     tools:context="pad.ucm.approvisionate.MainActivity"
     tools:showIn="@layout/app_bar_main">
 
-    <com.google.android.gms.common.SignInButton
-        android:id="@+id/sign_in_button"
-        android:layout_width="wrap_content"
+
+    <fragment
+        android:id="@+id/map"
+        class="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        tools:layout_editor_absoluteY="231dp"
-        tools:layout_editor_absoluteX="137dp" />
-
-    <TextView
-        android:id="@+id/textView2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="TextView"
-        android:visibility="invisible"
-        tools:layout_editor_absoluteY="279dp"
-        tools:layout_editor_absoluteX="163dp" />
-
-
+        android:layout_alignParentBottom="true"
+         />
 </android.support.constraint.ConstraintLayout>
