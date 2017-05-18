@@ -2,6 +2,8 @@ package pad.ucm.approvisionate;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -15,22 +17,30 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
-
-import com.firebase.ui.auth.AuthUI;
-import com.firebase.ui.auth.ErrorCodes;
-import com.firebase.ui.auth.IdpResponse;
-import com.firebase.ui.auth.ResultCodes;
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.auth.api.signin.GoogleSignInResult;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.Scopes;
+import com.google.android.gms.common.SignInButton;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.Scope;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-
-import java.util.Arrays;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GoogleAuthProvider;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener, GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks {
 
     private static final int RC_SIGN_IN = 123;
     private TextView texto;
+    private GoogleApiClient mGoogleApiClient;
+    private FirebaseAuth mAuth;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,20 +65,46 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-        texto = (TextView) findViewById(R.id.texto);
-        startActivityForResult(
-                AuthUI.getInstance()
-                        .createSignInIntentBuilder()
-                        .setProviders(Arrays.asList(new AuthUI.IdpConfig.Builder(AuthUI.EMAIL_PROVIDER).build()))
-                        .build(),
-                RC_SIGN_IN);
 
+        SignInButton signInButton = (SignInButton) findViewById(R.id.sign_in_button);
+        signInButton.setSize(SignInButton.SIZE_STANDARD);
+        signInButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                signIn();
+            }
+        });
 
+        texto = (TextView)findViewById(R.id.textView2);
+        texto.setVisibility(View.VISIBLE);
+        mAuth = FirebaseAuth.getInstance();
+        if (mAuth.getCurrentUser() == null) {
+            GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestIdToken("790244775820-ml3mhln68c0dkgeds9a1hbrfl8b3899b.apps.googleusercontent.com")
+                    .requestScopes(new Scope(Scopes.PLUS_LOGIN))
+                    .requestScopes(new Scope(Scopes.PLUS_ME))
+                    .requestEmail()
+                    .build();
 
+            mGoogleApiClient = new GoogleApiClient.Builder(this)
+                    .enableAutoManage(this, this)
+                    .addApi(Auth.GOOGLE_SIGN_IN_API,gso)
+                    // .addApi(Plus.API, null)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    // .addScope(Plus.SCOPE_PLUS_LOGIN)
+                    .build();
+            texto.setText("INICIALIZADO");
+        } else {
+            texto.setText("usuario loguaeado");
+        }
 
 
     }
+    private void signIn() {
+        Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
+        startActivityForResult(signInIntent, RC_SIGN_IN);
 
+    }
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -129,37 +165,64 @@ public class MainActivity extends AppCompatActivity
         super.onActivityResult(requestCode, resultCode, data);
         // RC_SIGN_IN is the request code you passed into startActivityForResult(...) when starting the sign in flow.
         if (requestCode == RC_SIGN_IN) {
-            IdpResponse response = IdpResponse.fromResultIntent(data);
+            GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
 
-            // Successfully signed in
-            if (resultCode == ResultCodes.OK) {
-                FirebaseAuth auth = FirebaseAuth.getInstance();
-                if (auth.getCurrentUser() != null) {
-                    FirebaseDatabase database = FirebaseDatabase.getInstance();
-                    DatabaseReference myRef = database.getReference();
-                    if (myRef.child("localizacion").setValue(new String("HOLa")).isComplete())
-                        texto.setText("HECHO");
-                    else
-                        texto.setText("NO HECHO");
-                }else
-                    texto.setText("EROOR");
+
+            if (result.isSuccess()) {
+                // Signed in successfully, show authenticated UI.
+                texto.setText("BIEN");
+                texto.setVisibility(View.VISIBLE);
+
             } else {
-                // Sign in failed
-                if (response == null) {
-                    // User pressed back button
+                // Signed out, show unauthenticated UI.
 
-                }
+                texto.setText(result.getStatus().getStatusMessage());
 
-                if (response.getErrorCode() == ErrorCodes.NO_NETWORK) {
-                    texto.setText("SIN CONEXION");
-                }
-
-                if (response.getErrorCode() == ErrorCodes.UNKNOWN_ERROR) {
-                    texto.setText("DESCONOCIDO");
-                }
+                texto.setVisibility(View.VISIBLE);
             }
 
 
+
+
         }
+    }
+    private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
+
+
+        AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
+        mAuth.signInWithCredential(credential)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            // Sign in success, update UI with the signed-in user's information
+
+                            FirebaseUser user = mAuth.getCurrentUser();
+
+                        } else {
+                            // If sign in fails, display a message to the user.
+
+
+
+                        }
+
+                        // ...
+                    }
+                });
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
     }
 }
