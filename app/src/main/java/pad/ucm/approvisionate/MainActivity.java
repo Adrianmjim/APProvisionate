@@ -43,6 +43,8 @@ import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+
+
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, OnMapReadyCallback {
 
@@ -51,6 +53,7 @@ public class MainActivity extends AppCompatActivity
     private GoogleApiClient mGoogleApiClient;
     private FirebaseAuth mAuth;
     private GoogleMap mapa;
+    private NavigationView navigationView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,8 +66,8 @@ public class MainActivity extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                Intent add = new Intent(view.getContext(), AddItemActivity.class);
+                startActivity(add);
             }
         });
 
@@ -75,13 +78,13 @@ public class MainActivity extends AppCompatActivity
         toggle.syncState();
 
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
 
         mAuth = FirebaseAuth.getInstance();
         if (mAuth.getCurrentUser() == null) {
-            GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestIdToken("790244775820-ml3mhln68c0dkgeds9a1hbrfl8b3899b.apps.googleusercontent.com")
+            GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestIdToken(getString(R.string.server_client_id))
                     .requestScopes(new Scope(Scopes.PLUS_LOGIN))
                     .requestScopes(new Scope(Scopes.PLUS_ME))
                     .requestEmail()
@@ -97,7 +100,11 @@ public class MainActivity extends AppCompatActivity
                     .build();
             signIn();
         } else {
-            texto.setText("usuario loguaeado");
+            View header = navigationView.getHeaderView(0);
+            TextView nombre = (TextView) header.findViewById(R.id.nombreUsuario);
+            TextView email = (TextView) header.findViewById(R.id.emailUsuario);
+            nombre.setText(mAuth.getCurrentUser().getDisplayName());
+            email.setText(mAuth.getCurrentUser().getEmail());
         }
         SupportMapFragment mapFragment =
                 (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
@@ -173,16 +180,15 @@ public class MainActivity extends AppCompatActivity
 
             if (result.isSuccess()) {
                 // Signed in successfully, show authenticated UI.
-                texto.setText(result.getSignInAccount().getDisplayName());
-                texto.setVisibility(View.VISIBLE);
+
                 firebaseAuthWithGoogle(result.getSignInAccount());
 
             } else {
                 // Signed out, show unauthenticated UI.
 
-                texto.setText(result.getStatus().toString());
-
-                texto.setVisibility(View.VISIBLE);
+                View header = navigationView.getHeaderView(0);
+                TextView nombre = (TextView) header.findViewById(R.id.nombreUsuario);
+                nombre.setText(result.getStatus().toString());
             }
 
 
@@ -204,7 +210,12 @@ public class MainActivity extends AppCompatActivity
                             FirebaseDatabase database = FirebaseDatabase.getInstance();
                             DatabaseReference myRef = database.getReference("message");
                             myRef.setValue("Hello, World!");
-                            texto.setText("LO TENEMOS");
+                            View header = navigationView.getHeaderView(0);
+                            TextView nombre = (TextView) header.findViewById(R.id.nombreUsuario);
+                            TextView email = (TextView) header.findViewById(R.id.emailUsuario);
+                            nombre.setText(mAuth.getCurrentUser().getDisplayName());
+                            email.setText(mAuth.getCurrentUser().getEmail());
+
 
                         } else {
                             // If sign in fails, display a message to the user.
