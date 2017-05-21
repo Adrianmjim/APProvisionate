@@ -2,6 +2,9 @@ package pad.ucm.approvisionate;
 
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -16,6 +19,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.android.gms.auth.api.Auth;
@@ -42,6 +46,11 @@ import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.concurrent.ExecutionException;
 
 
 public class MainActivity extends AppCompatActivity
@@ -61,14 +70,7 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
 
-
-            }
-        });
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -86,6 +88,7 @@ public class MainActivity extends AppCompatActivity
             GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestIdToken(getString(R.string.server_client_id))
                     .requestScopes(new Scope(Scopes.PLUS_LOGIN))
                     .requestScopes(new Scope(Scopes.PLUS_ME))
+                    .requestProfile()
                     .requestEmail()
                     .build();
 
@@ -104,6 +107,20 @@ public class MainActivity extends AppCompatActivity
             TextView email = (TextView) header.findViewById(R.id.emailUsuario);
             nombre.setText(mAuth.getCurrentUser().getDisplayName());
             email.setText(mAuth.getCurrentUser().getEmail());
+            ImageView imagen = (ImageView) header.findViewById(R.id.imagenUsuario);
+            Uri aux = mAuth.getCurrentUser().getPhotoUrl();
+            if (aux != null) {
+
+                Bitmap bitmap = null;
+                try {
+                    bitmap = new Taska().execute(aux.toString()).get();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (ExecutionException e) {
+                    e.printStackTrace();
+                }
+                imagen.setImageBitmap(bitmap);
+            }
         }
         SupportMapFragment mapFragment =
                 (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
@@ -162,6 +179,7 @@ public class MainActivity extends AppCompatActivity
         }  else if (id == R.id.nav_share) {
 
         } else if (id == R.id.nav_send) {
+            mAuth.signOut();
 
         }
 
