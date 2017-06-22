@@ -3,10 +3,10 @@ apply plugin: 'com.android.application'
 android {
     signingConfigs {
         config {
-            keyAlias 'AppKey'
-            keyPassword 'soportalKey'
-            storeFile file('/home/key/android.jks')
-            storePassword 'soportalKey'
+            keyAlias 'key0'
+            keyPassword 'porche1994'
+            storeFile file('/home/adrian/Documentos/deployment.jks')
+            storePassword 'porche1994'
         }
     }
     compileSdkVersion 25
@@ -15,9 +15,10 @@ android {
         applicationId "pad.ucm.approvisionate"
         minSdkVersion 22
         targetSdkVersion 25
-        versionCode 1
+        versionCode 2
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        signingConfig signingConfigs.config
     }
     buildTypes {
         release {
@@ -27,6 +28,17 @@ android {
         }
         debug {
             signingConfig signingConfigs.config
+        }
+    }
+    productFlavors {
+        flavor {
+            minSdkVersion 22
+            applicationId 'pad.ucm.approvisionate'
+            signingConfig signingConfigs.config
+            targetSdkVersion 25
+            testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'
+            versionCode 3
+            versionName '0.3'
         }
     }
 }

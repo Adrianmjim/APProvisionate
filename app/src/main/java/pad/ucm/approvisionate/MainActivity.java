@@ -3,12 +3,10 @@ package pad.ucm.approvisionate;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.GravityCompat;
@@ -41,15 +39,13 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.concurrent.ExecutionException;
 
 
@@ -62,6 +58,11 @@ public class MainActivity extends AppCompatActivity
     private FirebaseAuth mAuth;
     private GoogleMap mapa;
     private NavigationView navigationView;
+    private FirebaseDatabase bd;
+    private DatabaseReference refGithub;
+    private String github;
+    private DatabaseReference refPlay;
+    private String play;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,43 +86,12 @@ public class MainActivity extends AppCompatActivity
 
         mAuth = FirebaseAuth.getInstance();
         if (mAuth.getCurrentUser() == null) {
-            GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestIdToken(getString(R.string.server_client_id))
-                    .requestScopes(new Scope(Scopes.PLUS_LOGIN))
-                    .requestScopes(new Scope(Scopes.PLUS_ME))
-                    .requestProfile()
-                    .requestEmail()
-                    .build();
-
-            mGoogleApiClient = new GoogleApiClient.Builder(this)
-                    .enableAutoManage(this, this)
-                    .addApi(Auth.GOOGLE_SIGN_IN_API,gso)
-                    // .addApi(Plus.API, null)
-                    .addConnectionCallbacks(this)
-                    .addOnConnectionFailedListener(this)
-                    // .addScope(Plus.SCOPE_PLUS_LOGIN)
-                    .build();
             signIn();
         } else {
-            View header = navigationView.getHeaderView(0);
-            TextView nombre = (TextView) header.findViewById(R.id.nombreUsuario);
-            TextView email = (TextView) header.findViewById(R.id.emailUsuario);
-            nombre.setText(mAuth.getCurrentUser().getDisplayName());
-            email.setText(mAuth.getCurrentUser().getEmail());
-            ImageView imagen = (ImageView) header.findViewById(R.id.imagenUsuario);
-            Uri aux = mAuth.getCurrentUser().getPhotoUrl();
-            if (aux != null) {
-
-                Bitmap bitmap = null;
-                try {
-                    bitmap = new Taska().execute(aux.toString()).get();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (ExecutionException e) {
-                    e.printStackTrace();
-                }
-                imagen.setImageBitmap(bitmap);
-            }
+            iniciarVistaUsuario();
+            iniciarBD();
         }
+
         SupportMapFragment mapFragment =
                 (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -131,9 +101,75 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void signIn() {
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestIdToken(getString(R.string.server_client_id))
+                .requestScopes(new Scope(Scopes.PLUS_LOGIN))
+                .requestScopes(new Scope(Scopes.PLUS_ME))
+                .requestProfile()
+                .requestEmail()
+                .build();
+
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .enableAutoManage(this, this)
+                .addApi(Auth.GOOGLE_SIGN_IN_API,gso)
+                // .addApi(Plus.API, null)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                // .addScope(Plus.SCOPE_PLUS_LOGIN)
+                .build();
         Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
         startActivityForResult(signInIntent, RC_SIGN_IN);
 
+    }
+    private void iniciarVistaUsuario() {
+        View header = navigationView.getHeaderView(0);
+        TextView nombre = (TextView) header.findViewById(R.id.nombreUsuario);
+        TextView email = (TextView) header.findViewById(R.id.emailUsuario);
+        nombre.setText(mAuth.getCurrentUser().getDisplayName());
+        email.setText(mAuth.getCurrentUser().getEmail());
+        ImageView imagen = (ImageView) header.findViewById(R.id.imagenUsuario);
+        Uri aux = mAuth.getCurrentUser().getPhotoUrl();
+        if (aux != null) {
+
+            Bitmap bitmap = null;
+            try {
+                bitmap = new Taska().execute(aux.toString()).get();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
+            imagen.setImageBitmap(bitmap);
+        }
+    }
+    private void iniciarBD() {
+        bd = FirebaseDatabase.getInstance();
+        refGithub = bd.getReference("GitHub");
+        refGithub.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                // This method is called once with the initial value and again
+                // whenever data at this location is updated.
+                github = dataSnapshot.getValue(String.class);
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+
+            }
+        });
+        refPlay = bd.getReference("PlayStore");
+        refPlay.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                play = dataSnapshot.getValue(String.class);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 
     @Override
@@ -162,7 +198,11 @@ public class MainActivity extends AppCompatActivity
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.add) {
-            return true;
+            Intent i = new Intent(this, ActivityAdd.class);
+            startActivity(i);
+        } else if (id == R.id.locate) {
+            Intent i = new Intent(this, ActivityAdd.class);
+            startActivity(i);
         }
 
         return super.onOptionsItemSelected(item);
@@ -176,10 +216,14 @@ public class MainActivity extends AppCompatActivity
 
         if (id == R.id.nav_gallery) {
 
-        }  else if (id == R.id.nav_share) {
+        }  else if (id == R.id.nav_gallery2) {
 
+        } else if (id == R.id.nav_share) {
+            //Intent i = new Intent(this, nombredetuactivity.class);
+            //i.putExtra("github", github);
+            //i.putExtra("play", play);
+            //startActivity(i);
         } else if (id == R.id.nav_send) {
-            mAuth.signOut();
 
         }
 
@@ -223,16 +267,8 @@ public class MainActivity extends AppCompatActivity
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
 
-                            FirebaseUser user = mAuth.getCurrentUser();
-                            FirebaseDatabase database = FirebaseDatabase.getInstance();
-                            DatabaseReference myRef = database.getReference("message");
-                            myRef.setValue("Hello, World!");
-                            View header = navigationView.getHeaderView(0);
-                            TextView nombre = (TextView) header.findViewById(R.id.nombreUsuario);
-                            TextView email = (TextView) header.findViewById(R.id.emailUsuario);
-                            nombre.setText(mAuth.getCurrentUser().getDisplayName());
-                            email.setText(mAuth.getCurrentUser().getEmail());
-
+                            iniciarVistaUsuario();
+                            iniciarBD();
 
                         } else {
                             // If sign in fails, display a message to the user.

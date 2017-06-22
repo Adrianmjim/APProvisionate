@@ -6,6 +6,10 @@
             android:id="@+id/nav_gallery"
             android:icon="@drawable/ic_menu_gallery"
             android:title="Localizaciones" />
+        <item
+            android:id="@+id/nav_gallery2"
+            android:icon="@drawable/ic_menu_gallery"
+            android:title="Abierto ahora" />
 
     </group>
 
@@ -14,11 +18,11 @@
             <item
                 android:id="@+id/nav_share"
                 android:icon="@drawable/ic_menu_share"
-                android:title="Share" />
+                android:title="Acerca de" />
             <item
                 android:id="@+id/nav_send"
                 android:icon="@drawable/ic_menu_send"
-                android:title="Send" />
+                android:title="Logout" />
         </menu>
     </item>
 
