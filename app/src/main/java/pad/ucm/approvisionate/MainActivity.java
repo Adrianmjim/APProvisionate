@@ -9,6 +9,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -50,9 +51,10 @@ import java.util.concurrent.ExecutionException;
 
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, OnMapReadyCallback {
+        implements NavigationView.OnNavigationItemSelectedListener, GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback {
 
     private static final int RC_SIGN_IN = 123;
+    private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 120;
     private TextView texto;
     private GoogleApiClient mGoogleApiClient;
     private FirebaseAuth mAuth;
@@ -70,7 +72,6 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
 
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -97,7 +98,6 @@ public class MainActivity extends AppCompatActivity
         mapFragment.getMapAsync(this);
 
 
-
     }
 
     private void signIn() {
@@ -110,7 +110,7 @@ public class MainActivity extends AppCompatActivity
 
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .enableAutoManage(this, this)
-                .addApi(Auth.GOOGLE_SIGN_IN_API,gso)
+                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 // .addApi(Plus.API, null)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
@@ -119,7 +119,9 @@ public class MainActivity extends AppCompatActivity
         Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
         startActivityForResult(signInIntent, RC_SIGN_IN);
 
+
     }
+
     private void iniciarVistaUsuario() {
         View header = navigationView.getHeaderView(0);
         TextView nombre = (TextView) header.findViewById(R.id.nombreUsuario);
@@ -141,6 +143,7 @@ public class MainActivity extends AppCompatActivity
             imagen.setImageBitmap(bitmap);
         }
     }
+
     private void iniciarBD() {
         bd = FirebaseDatabase.getInstance();
         refGithub = bd.getReference("GitHub");
@@ -201,8 +204,15 @@ public class MainActivity extends AppCompatActivity
             Intent i = new Intent(this, ActivityAdd.class);
             startActivity(i);
         } else if (id == R.id.locate) {
-            Intent i = new Intent(this, ActivityAdd.class);
-            startActivity(i);
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+                    == PackageManager.PERMISSION_GRANTED) {
+                mapa.setMyLocationEnabled(true);
+            } else {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                        PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+            }
+
         }
 
         return super.onOptionsItemSelected(item);
@@ -216,7 +226,7 @@ public class MainActivity extends AppCompatActivity
 
         if (id == R.id.nav_gallery) {
 
-        }  else if (id == R.id.nav_gallery2) {
+        } else if (id == R.id.nav_gallery2) {
 
         } else if (id == R.id.nav_share) {
             //Intent i = new Intent(this, nombredetuactivity.class);
@@ -256,6 +266,28 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION) {
+            if (permissions.length == 1 &&
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    // TODO: Consider calling
+                    //    ActivityCompat#requestPermissions
+                    // here to request the missing permissions, and then overriding
+                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                    //                                          int[] grantResults)
+                    // to handle the case where the user grants the permission. See the documentation
+                    // for ActivityCompat#requestPermissions for more details.
+                    return;
+                }
+                mapa.setMyLocationEnabled(true);
+            } else {
+
+            }
+        }
+    }
     private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
 
 
@@ -303,18 +335,9 @@ public class MainActivity extends AppCompatActivity
                 .position(new LatLng(-33.87365, 151.20689))
                 .title("Sydney")
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
 
-        }
-        mapa.setMyLocationEnabled(true);
+
+
     }
 
 

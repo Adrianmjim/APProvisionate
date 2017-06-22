@@ -7,8 +7,17 @@ package pad.ucm.approvisionate.modelo;
 public class Local {
     private String nombre;
     private String foto;
-    public Local(String nombre,String foto) {
+    private String horaApertura;
+    private String horaCierre;
+    private Double latitud;
+    private Double longitud;
+    public Local() {}
+    public Local(String nombre,String foto, String horaApertura, String horaCierre, Double latitud, Double longitud) {
         this.nombre = nombre;
         this.foto = foto;
+        this.horaApertura = horaApertura;
+        this.horaCierre = horaCierre;
+        this.latitud = latitud;
+        this.longitud = longitud;
     }
 }
