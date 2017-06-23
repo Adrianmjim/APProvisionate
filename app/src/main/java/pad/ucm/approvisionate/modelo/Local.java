@@ -11,13 +11,15 @@ public class Local {
     private String horaCierre;
     private Double latitud;
     private Double longitud;
+    private String creador;
     public Local() {}
-    public Local(String nombre,String foto, String horaApertura, String horaCierre, Double latitud, Double longitud) {
+    public Local(String nombre,String foto, String horaApertura, String horaCierre, Double latitud, Double longitud, String creador) {
         this.nombre = nombre;
         this.foto = foto;
         this.horaApertura = horaApertura;
         this.horaCierre = horaCierre;
         this.latitud = latitud;
         this.longitud = longitud;
+        this.creador = creador;
     }
 }

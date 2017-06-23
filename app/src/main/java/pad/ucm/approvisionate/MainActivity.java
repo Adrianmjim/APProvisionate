@@ -1,10 +1,15 @@
 package pad.ucm.approvisionate;
 
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
@@ -40,6 +45,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -65,6 +71,8 @@ public class MainActivity extends AppCompatActivity
     private String github;
     private DatabaseReference refPlay;
     private String play;
+    private LocationManager locationManager;
+    private FirebaseAuth.AuthStateListener listener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,10 +92,10 @@ public class MainActivity extends AppCompatActivity
         navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-
+        signIn();
         mAuth = FirebaseAuth.getInstance();
         if (mAuth.getCurrentUser() == null) {
-            signIn();
+            lanzarSignIn();
         } else {
             iniciarVistaUsuario();
             iniciarBD();
@@ -97,7 +105,22 @@ public class MainActivity extends AppCompatActivity
                 (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
+        listener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                FirebaseUser user = firebaseAuth.getCurrentUser();
+                if (user != null) {
+                    // User is signed in
+
+                } else {
+                    // User is signed out
+                    lanzarSignIn();
+                }
+                // ...
+            }
+        };
     }
 
     private void signIn() {
@@ -116,10 +139,14 @@ public class MainActivity extends AppCompatActivity
                 .addOnConnectionFailedListener(this)
                 // .addScope(Plus.SCOPE_PLUS_LOGIN)
                 .build();
+
+        lanzarSignIn();
+
+
+    }
+    private void lanzarSignIn() {
         Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
         startActivityForResult(signInIntent, RC_SIGN_IN);
-
-
     }
 
     private void iniciarVistaUsuario() {
@@ -206,6 +233,7 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.locate) {
             if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
                     == PackageManager.PERMISSION_GRANTED) {
+                checkLocation();
                 mapa.setMyLocationEnabled(true);
             } else {
                 ActivityCompat.requestPermissions(this,
@@ -234,6 +262,7 @@ public class MainActivity extends AppCompatActivity
             //i.putExtra("play", play);
             //startActivity(i);
         } else if (id == R.id.nav_send) {
+            FirebaseAuth.getInstance().signOut();
 
         }
 
@@ -282,6 +311,7 @@ public class MainActivity extends AppCompatActivity
                     // for ActivityCompat#requestPermissions for more details.
                     return;
                 }
+                checkLocation();
                 mapa.setMyLocationEnabled(true);
             } else {
 
@@ -340,5 +370,47 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+    private boolean checkLocation() {
+        if (!isLocationEnabled())
+            showAlert();
+        return isLocationEnabled();
+    }
 
+    private void showAlert() {
+        final AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+        dialog.setTitle("Enable Location")
+                .setMessage("Su ubicación esta desactivada.\npor favor active su ubicación " +
+                        "usa esta app")
+                .setPositiveButton("Configuración de ubicación", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+                        Intent myIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                        startActivity(myIntent);
+                    }
+                })
+                .setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface paramDialogInterface, int paramInt) {
+                    }
+                });
+        dialog.show();
+    }
+
+    private boolean isLocationEnabled() {
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+                locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+    }
+    @Override
+    public void onStart() {
+        super.onStart();
+        mAuth.addAuthStateListener(listener);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (listener != null) {
+            mAuth.removeAuthStateListener(listener);
+        }
+    }
 }
