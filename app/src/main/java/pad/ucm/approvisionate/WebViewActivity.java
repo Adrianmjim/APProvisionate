@@ -1,7 +1,9 @@
 package pad.ucm.approvisionate;
 
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -19,6 +21,10 @@ public class WebViewActivity extends AppCompatActivity {
         WebSettings webSettings= myWebView.getSettings();
         webSettings.setJavaScriptEnabled(true);
         final String linkSrc,linkPlayStore;
+        Toolbar myChildToolBar=(Toolbar)findViewById(R.id.toolbar);
+        setSupportActionBar(myChildToolBar);
+        ActionBar ab=getSupportActionBar();
+        ab.setDisplayHomeAsUpEnabled(true);
         if (savedInstanceState == null) {
             Bundle extras = getIntent().getExtras();
             if(extras == null) {
