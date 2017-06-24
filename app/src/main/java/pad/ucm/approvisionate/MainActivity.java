@@ -257,10 +257,10 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_gallery2) {
 
         } else if (id == R.id.nav_share) {
-            //Intent i = new Intent(this, nombredetuactivity.class);
-            //i.putExtra("github", github);
-            //i.putExtra("play", play);
-            //startActivity(i);
+            Intent i = new Intent(this, WebViewActivity.class);
+            i.putExtra("github", github);
+            i.putExtra("play", play);
+            startActivity(i);
         } else if (id == R.id.nav_send) {
             FirebaseAuth.getInstance().signOut();
 
