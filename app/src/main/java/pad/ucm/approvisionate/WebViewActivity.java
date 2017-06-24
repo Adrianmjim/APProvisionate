@@ -1,11 +1,13 @@
 package pad.ucm.approvisionate;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Toast;
 
 public class WebViewActivity extends AppCompatActivity {
 
@@ -17,6 +19,7 @@ public class WebViewActivity extends AppCompatActivity {
         setContentView(R.layout.activity_web_view);
         myWebView = (WebView) findViewById(R.id.webview);
         WebSettings webSettings= myWebView.getSettings();
+        webSettings.setJavaScriptEnabled(true);
         final String linkSrc,linkPlayStore;
         if (savedInstanceState == null) {
             Bundle extras = getIntent().getExtras();
@@ -40,6 +43,21 @@ public class WebViewActivity extends AppCompatActivity {
                 } else {
                     view.loadUrl("javascript:loadMsg('"+linkSrc+"','"+linkPlayStore+"')");
                 }
+            }
+
+            public boolean shouldOverrideUrlLoading(WebView view, String url){
+                if(url!=null && (url.startsWith("http://")||url.startsWith("https://"))){
+                    myWebView.loadUrl(url);
+                    return true;
+                }
+                else{
+                    Context c=getApplicationContext();
+                    int d= Toast.LENGTH_SHORT;
+                    Toast toast=Toast.makeText(c,url,d);
+                    toast.show();
+                    return false;
+                }
+
             }
         });
         myWebView.loadUrl("file:///android_asset/web/index.html");
