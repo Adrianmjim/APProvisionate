@@ -20,6 +20,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -39,6 +40,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -54,9 +56,11 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import pad.ucm.approvisionate.modelo.Local;
@@ -82,6 +86,7 @@ public class MainActivity extends AppCompatActivity
     private DatabaseReference refLocales;
     private HashMap<String, Local> locales;
     private boolean todos;
+    private List<Marker> marcadores;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -101,6 +106,7 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
         locales = new HashMap<String, Local>();
         todos = true;
+        marcadores = new ArrayList<Marker>();
         signIn();
         mAuth = FirebaseAuth.getInstance();
         if (mAuth.getCurrentUser() == null) {
@@ -214,7 +220,13 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                 locales.put(dataSnapshot.getKey(), dataSnapshot.getValue(Local.class));
-                mostrarLocales();
+                Local aux = dataSnapshot.getValue(Local.class);
+                Marker marcador = mapa.addMarker(new MarkerOptions()
+                        .position(new LatLng(aux.getLatitud(), aux.getLongitud()))
+                        .title(aux.getNombre())
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)).snippet(aux.getHoraApertura()+"-"+aux.getHoraCierre()));
+                marcador.setTag(dataSnapshot.getKey());
+                marcadores.add(marcador);
             }
 
             @Override
@@ -444,15 +456,32 @@ public class MainActivity extends AppCompatActivity
         }
     }
     private void mostrarLocales() {
+
         if (todos) {
-            Iterator it = locales.entrySet().iterator();
-            while (it.hasNext()) {
-                Map.Entry e = (Map.Entry)it.next();
-                Local aux = (Local)e.getValue();
-                mapa.addMarker(new MarkerOptions()
-                        .position(new LatLng(aux.getLatitud(), aux.getLongitud()))
-                        .title(aux.getNombre())
-                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)).snippet((String)e.getKey()));
+            for (int i = 0; i < marcadores.size(); i++) {
+                marcadores.get(i).setVisible(true);
+            }
+        } else {
+            Calendar c = Calendar.getInstance();
+            Date fecha = c.getTime();
+            Date apertura = null, cierre = null;
+            for (int i = 0; i < marcadores.size(); i++) {
+                Local aux = locales.get(marcadores.get(i).getTag());
+                c.set(Calendar.HOUR_OF_DAY, Integer.parseInt(aux.getHoraApertura().split(":")[0]));
+                c.set(Calendar.MINUTE, 0);
+                c.set(Calendar.SECOND, 0);
+                apertura = c.getTime();
+                int j = Integer.parseInt(aux.getHoraCierre().split(":")[0]);
+                if (j < Integer.parseInt(aux.getHoraApertura().split(":")[0])) c.set(Calendar.DAY_OF_MONTH,c.get(Calendar.DAY_OF_MONTH)+1);
+                c.set(Calendar.HOUR_OF_DAY, j);
+                c.set(Calendar.MINUTE, 0);
+                c.set(Calendar.SECOND, 0);
+                cierre = c.getTime();
+                Log.d("MIO", fecha.toString());
+                Log.d("MIO", apertura.toString());
+                Log.d("MIO", cierre.toString());
+                if (fecha.after(apertura)) marcadores.get(i).setVisible(true);
+                else marcadores.get(i).setVisible(false);
             }
         }
     }
