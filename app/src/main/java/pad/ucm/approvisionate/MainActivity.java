@@ -20,12 +20,12 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -71,6 +71,7 @@ public class MainActivity extends AppCompatActivity
 
     private static final int RC_SIGN_IN = 123;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 120;
+    private static final int RC_ADD = 4;
     private TextView texto;
     private GoogleApiClient mGoogleApiClient;
     private FirebaseAuth mAuth;
@@ -104,6 +105,7 @@ public class MainActivity extends AppCompatActivity
 
         navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
         locales = new HashMap<String, Local>();
         todos = true;
         marcadores = new ArrayList<Marker>();
@@ -278,7 +280,7 @@ public class MainActivity extends AppCompatActivity
         //noinspection SimplifiableIfStatement
         if (id == R.id.add) {
             Intent i = new Intent(this, ActivityAdd.class);
-            startActivity(i);
+            startActivityForResult(i, RC_ADD);
         } else if (id == R.id.locate) {
             if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
                     == PackageManager.PERMISSION_GRANTED) {
@@ -343,7 +345,7 @@ public class MainActivity extends AppCompatActivity
             }
 
 
-        }
+        } else if (requestCode == RC_ADD) Toast.makeText(getApplicationContext(), "Muchas gracias por añadir tu localización. Esta aplicación funciona gracias a ti :)", Toast.LENGTH_LONG).show();
     }
 
     @Override
@@ -472,15 +474,18 @@ public class MainActivity extends AppCompatActivity
                 c.set(Calendar.SECOND, 0);
                 apertura = c.getTime();
                 int j = Integer.parseInt(aux.getHoraCierre().split(":")[0]);
-                if (j < Integer.parseInt(aux.getHoraApertura().split(":")[0])) c.set(Calendar.DAY_OF_MONTH,c.get(Calendar.DAY_OF_MONTH)+1);
+                if (j < Integer.parseInt(aux.getHoraApertura().split(":")[0])) {
+                    c.set(Calendar.DAY_OF_MONTH,c.get(Calendar.DAY_OF_MONTH)+1);
+                }
                 c.set(Calendar.HOUR_OF_DAY, j);
                 c.set(Calendar.MINUTE, 0);
                 c.set(Calendar.SECOND, 0);
                 cierre = c.getTime();
-                Log.d("MIO", fecha.toString());
-                Log.d("MIO", apertura.toString());
-                Log.d("MIO", cierre.toString());
-                if (fecha.after(apertura)) marcadores.get(i).setVisible(true);
+                if (j < Integer.parseInt(aux.getHoraApertura().split(":")[0])) {
+                    c.set(Calendar.DAY_OF_MONTH,c.get(Calendar.DAY_OF_MONTH)-1);
+                }
+
+                if (fecha.after(apertura) && fecha.before(cierre)) marcadores.get(i).setVisible(true);
                 else marcadores.get(i).setVisible(false);
             }
         }

@@ -38,11 +38,7 @@ public class WebViewActivity extends AppCompatActivity {
         myWebView.setWebViewClient(new WebViewClient(){
             @Override
             public void onPageFinished(WebView view, String url){
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-                    view.evaluateJavascript("loadMsg('"+linkSrc+"','"+linkPlayStore+"')", null);
-                } else {
-                    view.loadUrl("javascript:loadMsg('"+linkSrc+"','"+linkPlayStore+"')");
-                }
+                view.evaluateJavascript("loadMsg('"+linkSrc+"','"+linkPlayStore+"')", null);
             }
         });
 

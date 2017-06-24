@@ -22,13 +22,16 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -61,6 +64,7 @@ public class ActivityAdd extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add);
+        progressDialog = new ProgressDialog(this);
         foto = (Button) findViewById(R.id.buttonCamara);
         texto = (EditText) findViewById(R.id.nombreLocaluse);
         apertura = (Spinner) findViewById(R.id.spinnerApertura);
@@ -86,20 +90,43 @@ public class ActivityAdd extends AppCompatActivity {
         add.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                FirebaseAuth mAuth = FirebaseAuth.getInstance();
+                if (!texto.getText().toString().equalsIgnoreCase("")) {
+                    if (confirmacion.isChecked()) {
+                        if (imagen != null) {
+                            FirebaseAuth mAuth = FirebaseAuth.getInstance();
 
-                FirebaseDatabase db = FirebaseDatabase.getInstance();
-                DatabaseReference postsRef = db.getReference("Locales");
+                            FirebaseDatabase db = FirebaseDatabase.getInstance();
+                            DatabaseReference postsRef = db.getReference("Locales");
 
-                DatabaseReference newPostRef = postsRef.push();
-                String key = newPostRef.getKey();
-                Local aux = new Local(texto.getText().toString(), key, apertura.getSelectedItem().toString(), cierre.getSelectedItem().toString(), latitude,longitude, mAuth.getCurrentUser().getEmail());
-                newPostRef.setValue(aux);
-                String ruta = "images/"+key+".jpg";
-                FirebaseStorage serv = FirebaseStorage.getInstance();
-                StorageReference ref = serv.getReferenceFromUrl("gs://approvisionate.appspot.com/");
-                ref = ref.child(ruta);
-                ref.putFile(Uri.fromFile(imagen));
+                            DatabaseReference newPostRef = postsRef.push();
+                            String key = newPostRef.getKey();
+                            Local aux = new Local(texto.getText().toString(), key, apertura.getSelectedItem().toString(), cierre.getSelectedItem().toString(), latitude,longitude, mAuth.getCurrentUser().getEmail());
+                            newPostRef.setValue(aux);
+                            String ruta = "images/"+key+".jpg";
+                            FirebaseStorage serv = FirebaseStorage.getInstance();
+                            StorageReference ref = serv.getReferenceFromUrl("gs://approvisionate.appspot.com/");
+                            ref = ref.child(ruta);
+                            UploadTask upload = ref.putFile(Uri.fromFile(imagen));
+
+                            progressDialog.setTitle("Añadiendo locaclización...");
+                            progressDialog.show();
+                            upload.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                                @Override
+                                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                    progressDialog.cancel();
+                                    finish();
+                                }
+                            });
+                        } else {
+                            Toast.makeText(getApplicationContext(), "Realice una fotografía del lugar para poder añadir la ubicación", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Obtenga la ubicación del lugar para poder añadirlo", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(getApplicationContext(), "Introduzca el nombre del sitio para poder añadirlo", Toast.LENGTH_SHORT).show();
+                }
+
 
             }
         });
@@ -117,7 +144,7 @@ public class ActivityAdd extends AppCompatActivity {
             if (checkLocation(location)) {
                 location.requestLocationUpdates(location.GPS_PROVIDER, 500, 10, locationListenerBest);
                 progressDialog = new ProgressDialog(this);
-                progressDialog.setTitle("Uploading");
+                progressDialog.setTitle("Obteniendo ubicación...");
                 progressDialog.show();
             }
 
