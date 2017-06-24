@@ -8,11 +8,13 @@ import android.webkit.WebViewClient;
 
 public class WebViewActivity extends AppCompatActivity {
 
+    private WebView myWebView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_web_view);
-        WebView myWebView = (WebView) findViewById(R.id.webview);
+        myWebView = (WebView) findViewById(R.id.webview);
         WebSettings webSettings= myWebView.getSettings();
         final String linkSrc,linkPlayStore;
         if (savedInstanceState == null) {
@@ -40,6 +42,15 @@ public class WebViewActivity extends AppCompatActivity {
             }
         });
         myWebView.loadUrl("file:///android_asset/web/index.html");
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (myWebView.canGoBack()) {
+            myWebView.goBack();
+        } else {
+            super.onBackPressed();
+        }
     }
 }
 
