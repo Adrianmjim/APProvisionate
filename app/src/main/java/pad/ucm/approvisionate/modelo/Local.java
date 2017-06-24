@@ -1,9 +1,11 @@
 package pad.ucm.approvisionate.modelo;
 
+import com.google.firebase.database.IgnoreExtraProperties;
+
 /**
  * Created by root on 21/06/17.
  */
-
+@IgnoreExtraProperties
 public class Local {
     private String nombre;
     private String foto;
@@ -21,5 +23,26 @@ public class Local {
         this.latitud = latitud;
         this.longitud = longitud;
         this.creador = creador;
+    }
+    public String getNombre() {
+        return nombre;
+    }
+    public String getFoto() {
+        return foto;
+    }
+    public String getHoraApertura() {
+        return horaApertura;
+    }
+    public String getHoraCierre() {
+        return horaCierre;
+    }
+    public String getCreador() {
+        return creador;
+    }
+    public Double getLatitud() {
+        return latitud;
+    }
+    public Double getLongitud() {
+        return longitud;
     }
 }

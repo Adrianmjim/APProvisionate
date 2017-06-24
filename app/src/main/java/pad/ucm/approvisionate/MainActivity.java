@@ -47,13 +47,19 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
+
+import pad.ucm.approvisionate.modelo.Local;
 
 
 public class MainActivity extends AppCompatActivity
@@ -73,7 +79,9 @@ public class MainActivity extends AppCompatActivity
     private String play;
     private LocationManager locationManager;
     private FirebaseAuth.AuthStateListener listener;
-
+    private DatabaseReference refLocales;
+    private HashMap<String, Local> locales;
+    private boolean todos;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -91,7 +99,8 @@ public class MainActivity extends AppCompatActivity
 
         navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-
+        locales = new HashMap<String, Local>();
+        todos = true;
         signIn();
         mAuth = FirebaseAuth.getInstance();
         if (mAuth.getCurrentUser() == null) {
@@ -200,6 +209,34 @@ public class MainActivity extends AppCompatActivity
 
             }
         });
+        refLocales = bd.getReference("Locales");
+        refLocales.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                locales.put(dataSnapshot.getKey(), dataSnapshot.getValue(Local.class));
+                mostrarLocales();
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+                locales.remove(dataSnapshot.getKey());
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 
     @Override
@@ -253,9 +290,11 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.nav_gallery) {
-
+            todos = true;
+            mostrarLocales();
         } else if (id == R.id.nav_gallery2) {
-
+            todos = false;
+            mostrarLocales();
         } else if (id == R.id.nav_share) {
             Intent i = new Intent(this, WebViewActivity.class);
             i.putExtra("github", github);
@@ -263,7 +302,7 @@ public class MainActivity extends AppCompatActivity
             startActivity(i);
         } else if (id == R.id.nav_send) {
             FirebaseAuth.getInstance().signOut();
-
+            lanzarSignIn();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -302,13 +341,7 @@ public class MainActivity extends AppCompatActivity
                     grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
                 if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    // TODO: Consider calling
-                    //    ActivityCompat#requestPermissions
-                    // here to request the missing permissions, and then overriding
-                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                    //                                          int[] grantResults)
-                    // to handle the case where the user grants the permission. See the documentation
-                    // for ActivityCompat#requestPermissions for more details.
+
                     return;
                 }
                 checkLocation();
@@ -345,7 +378,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        texto.setText("CONEXION FALLIDA");
+
     }
 
     @Override
@@ -361,10 +394,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mapa = googleMap;
-        mapa.addMarker(new MarkerOptions()
-                .position(new LatLng(-33.87365, 151.20689))
-                .title("Sydney")
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
+
 
 
 
@@ -378,7 +408,7 @@ public class MainActivity extends AppCompatActivity
 
     private void showAlert() {
         final AlertDialog.Builder dialog = new AlertDialog.Builder(this);
-        dialog.setTitle("Enable Location")
+        dialog.setTitle("Ubicación desactivada")
                 .setMessage("Su ubicación esta desactivada.\npor favor active su ubicación " +
                         "usa esta app")
                 .setPositiveButton("Configuración de ubicación", new DialogInterface.OnClickListener() {
@@ -411,6 +441,19 @@ public class MainActivity extends AppCompatActivity
         super.onStop();
         if (listener != null) {
             mAuth.removeAuthStateListener(listener);
+        }
+    }
+    private void mostrarLocales() {
+        if (todos) {
+            Iterator it = locales.entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry e = (Map.Entry)it.next();
+                Local aux = (Local)e.getValue();
+                mapa.addMarker(new MarkerOptions()
+                        .position(new LatLng(aux.getLatitud(), aux.getLongitud()))
+                        .title(aux.getNombre())
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)).snippet((String)e.getKey()));
+            }
         }
     }
 }
