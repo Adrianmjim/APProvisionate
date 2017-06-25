@@ -2,11 +2,13 @@ package pad.ucm.approvisionate.modelo;
 
 import com.google.firebase.database.IgnoreExtraProperties;
 
+import java.io.Serializable;
+
 /**
  * Created by root on 21/06/17.
  */
 @IgnoreExtraProperties
-public class Local {
+public class Local implements Serializable{
     private String nombre;
     private String foto;
     private String horaApertura;

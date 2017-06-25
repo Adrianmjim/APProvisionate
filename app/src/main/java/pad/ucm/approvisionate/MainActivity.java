@@ -56,6 +56,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -64,6 +65,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import pad.ucm.approvisionate.modelo.Local;
+import pad.ucm.approvisionate.modelo.Taska;
 
 
 public class MainActivity extends AppCompatActivity
@@ -315,8 +317,10 @@ public class MainActivity extends AppCompatActivity
             i.putExtra("play", play);
             startActivity(i);
         } else if (id == R.id.nav_send) {
-            FirebaseAuth.getInstance().signOut();
-            lanzarSignIn();
+            Intent i = new Intent(this, LocalActivity.class);
+            Local aux = locales.get(marcadores.get(0).getTag());
+            i.putExtra("local", (Serializable) aux);
+            startActivity(i);
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);

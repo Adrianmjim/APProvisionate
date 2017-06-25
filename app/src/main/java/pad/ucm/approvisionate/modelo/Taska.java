@@ -1,4 +1,4 @@
-package pad.ucm.approvisionate;
+package pad.ucm.approvisionate.modelo;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
