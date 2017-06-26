@@ -1,7 +1,6 @@
 package pad.ucm.approvisionate;
 
 import android.os.Bundle;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
@@ -23,8 +22,8 @@ public class WebViewActivity extends AppCompatActivity {
         final String linkSrc,linkPlayStore;
         Toolbar myChildToolBar=(Toolbar)findViewById(R.id.toolbar);
         setSupportActionBar(myChildToolBar);
-        ActionBar ab=getSupportActionBar();
-        ab.setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
         if (savedInstanceState == null) {
             Bundle extras = getIntent().getExtras();
             if(extras == null) {
@@ -65,6 +64,11 @@ public class WebViewActivity extends AppCompatActivity {
         } else {
             super.onBackPressed();
         }
+    }
+    @Override
+    public boolean onSupportNavigateUp() {
+        onBackPressed();
+        return false;
     }
 }
 

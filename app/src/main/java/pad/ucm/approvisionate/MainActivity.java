@@ -35,7 +35,10 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.Scopes;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Scope;
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMap.OnInfoWindowClickListener;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
@@ -69,7 +72,7 @@ import pad.ucm.approvisionate.modelo.Taska;
 
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback {
+        implements NavigationView.OnNavigationItemSelectedListener, GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback, OnInfoWindowClickListener {
 
     private static final int RC_SIGN_IN = 123;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 120;
@@ -228,7 +231,7 @@ public class MainActivity extends AppCompatActivity
                 Marker marcador = mapa.addMarker(new MarkerOptions()
                         .position(new LatLng(aux.getLatitud(), aux.getLongitud()))
                         .title(aux.getNombre())
-                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)).snippet(aux.getHoraApertura()+"-"+aux.getHoraCierre()));
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)).snippet(aux.getHoraApertura()+"-"+aux.getHoraCierre()));
                 marcador.setTag(dataSnapshot.getKey());
                 marcadores.add(marcador);
             }
@@ -317,10 +320,8 @@ public class MainActivity extends AppCompatActivity
             i.putExtra("play", play);
             startActivity(i);
         } else if (id == R.id.nav_send) {
-            Intent i = new Intent(this, LocalActivity.class);
-            Local aux = locales.get(marcadores.get(0).getTag());
-            i.putExtra("local", (Serializable) aux);
-            startActivity(i);
+            mAuth.signOut();
+            lanzarSignIn();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -349,7 +350,7 @@ public class MainActivity extends AppCompatActivity
             }
 
 
-        } else if (requestCode == RC_ADD) Toast.makeText(getApplicationContext(), "Muchas gracias por añadir tu localización. Esta aplicación funciona gracias a ti :)", Toast.LENGTH_LONG).show();
+        } else if (requestCode == RC_ADD && resultCode == 1) Toast.makeText(getApplicationContext(), "Muchas gracias por añadir tu localización. Esta aplicación funciona gracias a ti :)", Toast.LENGTH_LONG).show();
     }
 
     @Override
@@ -412,8 +413,9 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mapa = googleMap;
-
-
+        CameraUpdate camara = CameraUpdateFactory.newLatLngZoom(new LatLng(40.416674,-3.703839), 10);
+        mapa.animateCamera(camara);
+        mapa.setOnInfoWindowClickListener(this);
 
 
     }
@@ -493,5 +495,13 @@ public class MainActivity extends AppCompatActivity
                 else marcadores.get(i).setVisible(false);
             }
         }
+    }
+
+    @Override
+    public void onInfoWindowClick(Marker marker) {
+        Intent i = new Intent(this, LocalActivity.class);
+        Local aux = locales.get(marker.getTag());
+        i.putExtra("local", (Serializable) aux);
+        startActivity(i);
     }
 }

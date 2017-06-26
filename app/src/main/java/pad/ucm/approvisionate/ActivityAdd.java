@@ -64,6 +64,8 @@ public class ActivityAdd extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
         progressDialog = new ProgressDialog(this);
         foto = (Button) findViewById(R.id.buttonCamara);
         texto = (EditText) findViewById(R.id.nombreLocaluse);
@@ -108,12 +110,13 @@ public class ActivityAdd extends AppCompatActivity {
                             ref = ref.child(ruta);
                             UploadTask upload = ref.putFile(Uri.fromFile(imagen));
 
-                            progressDialog.setTitle("Añadiendo locaclización...");
+                            progressDialog.setTitle("Añadiendo localización...");
                             progressDialog.show();
                             upload.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                                 @Override
                                 public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                                     progressDialog.cancel();
+                                    setResult(1);
                                     finish();
                                 }
                             });
@@ -131,21 +134,23 @@ public class ActivityAdd extends AppCompatActivity {
             }
         });
     }
-    private void permisosAlmacenamiento() {
-        ActivityCompat.requestPermissions(this,
-                new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
-    }
 
     private void obtenerUbi() {
         LocationManager location = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
             if (checkLocation(location)) {
-                location.requestLocationUpdates(location.GPS_PROVIDER, 500, 10, locationListenerBest);
-                progressDialog = new ProgressDialog(this);
-                progressDialog.setTitle("Obteniendo ubicación...");
-                progressDialog.show();
+                Location aux = location.getLastKnownLocation(location.GPS_PROVIDER);
+                if (aux == null) {
+                    location.requestLocationUpdates(location.GPS_PROVIDER, 1000, 10, locationListenerBest);
+                    progressDialog.setTitle("Obteniendo ubicación...");
+                    progressDialog.show();
+                } else {
+                    latitude = aux.getLatitude();
+                    longitude = aux.getLongitude();
+                    confirmacion.setChecked(true);
+                }
+
             }
 
 
@@ -252,6 +257,10 @@ public class ActivityAdd extends AppCompatActivity {
         mCurrentPhotoPath = image.getAbsolutePath();
         return image;
     }
-
+    @Override
+    public boolean onSupportNavigateUp() {
+        onBackPressed();
+        return false;
+    }
 
 }
