@@ -15,15 +15,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <provider
-            android:name="android.support.v4.content.FileProvider"
-            android:authorities="com.example.myapp.fileprovider"
-            android:exported="false"
-            android:grantUriPermissions="true">
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/filepaths" />
-        </provider>
 
         <activity
             android:name=".MainActivity"
@@ -40,7 +31,8 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyAtRH2_nSFxc7Y78DTGB_QK4eI0nMSZU9w" />
 
-        <activity android:name=".ActivityAdd" />
+        <activity android:name=".ActivityAdd"
+            android:label="Añadir localización"/>
         <activity
             android:name=".WebViewActivity"
             android:label="@string/title_activity_web_view"
@@ -51,11 +43,7 @@
             android:name=".LocalActivity"
             android:label="@string/title_activity_local"
             android:theme="@style/AppTheme.NoActionBar">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
     </application>
 

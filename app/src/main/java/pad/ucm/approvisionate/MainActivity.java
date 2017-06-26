@@ -50,7 +50,6 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
@@ -88,7 +87,6 @@ public class MainActivity extends AppCompatActivity
     private DatabaseReference refPlay;
     private String play;
     private LocationManager locationManager;
-    private FirebaseAuth.AuthStateListener listener;
     private DatabaseReference refLocales;
     private HashMap<String, Local> locales;
     private boolean todos;
@@ -116,9 +114,12 @@ public class MainActivity extends AppCompatActivity
         marcadores = new ArrayList<Marker>();
         signIn();
         mAuth = FirebaseAuth.getInstance();
-        if (mAuth.getCurrentUser() == null) {
+        if (mAuth.getCurrentUser() == null && mGoogleApiClient == null) {
+            signIn();
+        } else if (mGoogleApiClient != null) {
+            mGoogleApiClient.connect();
             lanzarSignIn();
-        } else {
+        }else{
             iniciarVistaUsuario();
             iniciarBD();
         }
@@ -129,20 +130,7 @@ public class MainActivity extends AppCompatActivity
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
-        listener = new FirebaseAuth.AuthStateListener() {
-            @Override
-            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                FirebaseUser user = firebaseAuth.getCurrentUser();
-                if (user != null) {
-                    // User is signed in
 
-                } else {
-                    // User is signed out
-                    lanzarSignIn();
-                }
-                // ...
-            }
-        };
     }
 
     private void signIn() {
@@ -244,6 +232,13 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
                 locales.remove(dataSnapshot.getKey());
+                for (int i = 0; i < marcadores.size(); i++) {
+                    if (marcadores.get(i).getTag() == dataSnapshot.getKey()) {
+                        marcadores.get(i).setVisible(false);
+                        marcadores.remove(i);
+                        break;
+                    }
+                }
             }
 
             @Override
@@ -321,7 +316,9 @@ public class MainActivity extends AppCompatActivity
             startActivity(i);
         } else if (id == R.id.nav_send) {
             mAuth.signOut();
-            lanzarSignIn();
+            mGoogleApiClient.stopAutoManage(this);
+            mGoogleApiClient.disconnect();
+            signIn();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -450,19 +447,6 @@ public class MainActivity extends AppCompatActivity
         return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
                 locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
     }
-    @Override
-    public void onStart() {
-        super.onStart();
-        mAuth.addAuthStateListener(listener);
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        if (listener != null) {
-            mAuth.removeAuthStateListener(listener);
-        }
-    }
     private void mostrarLocales() {
 
         if (todos) {
@@ -503,5 +487,11 @@ public class MainActivity extends AppCompatActivity
         Local aux = locales.get(marker.getTag());
         i.putExtra("local", (Serializable) aux);
         startActivity(i);
+    }
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mGoogleApiClient.stopAutoManage(this);
+        mGoogleApiClient.disconnect();
     }
 }
