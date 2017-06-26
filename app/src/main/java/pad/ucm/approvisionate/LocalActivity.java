@@ -40,7 +40,7 @@ public class LocalActivity extends AppCompatActivity {
             }
         });
         texto = (TextView) findViewById(R.id.textoLocal);
-        texto.setText("HOLA");
+        texto.setText("Horario de apertura:   "+aux.getHoraApertura()+" - "+aux.getHoraCierre()+"\n" + "Latitud: "+ aux.getLatitud().toString()+"\nLongitud: "+aux.getLongitud()+"\nCreador: "+ aux.getCreador().split("@")[0]);
     }
     private void cambiarImagen() {
         Glide.with(this).load(bmp).fitCenter().into(image_scrolling_top);
