@@ -93,7 +93,7 @@ public class ActivityAdd extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (!texto.getText().toString().equalsIgnoreCase("")) {
-                    if (confirmacion.isChecked()) {
+                    if (confirmacion.isChecked() && latitude != null) {
                         if (imagen != null) {
                             FirebaseAuth mAuth = FirebaseAuth.getInstance();
 

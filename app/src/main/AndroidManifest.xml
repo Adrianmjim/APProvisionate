@@ -31,7 +31,7 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyAtRH2_nSFxc7Y78DTGB_QK4eI0nMSZU9w" />
 
-        <activity android:name=".ActivityAdd"
+        <activity android:name=".ActivityAdd" android:configChanges="screenSize|orientation"
             android:label="Añadir localización"/>
         <activity
             android:name=".WebViewActivity"
